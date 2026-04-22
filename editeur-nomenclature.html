@@ -1,13 +1,763 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Editeur Nomenclature</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Éditeur Nomenclature Pharmaceutique</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
+
+  :root {
+    --bg: #0f0f0f;
+    --bg2: #181818;
+    --bg3: #222;
+    --border: #2e2e2e;
+    --border2: #3a3a3a;
+    --text: #e8e8e0;
+    --text2: #888;
+    --text3: #555;
+    --accent: #00e5a0;
+    --accent2: #00b87a;
+    --danger: #ff4d4d;
+    --info: #4d9fff;
+    --warn: #ffb84d;
+    --new: #1a3a2a;
+    --new-border: #00e5a0;
+    --mono: 'IBM Plex Mono', monospace;
+    --sans: 'IBM Plex Sans', sans-serif;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    font-size: 14px;
+    min-height: 100vh;
+  }
+
+  header {
+    background: var(--bg2);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .logo {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-family: var(--mono);
+    font-weight: 500;
+    font-size: 15px;
+    letter-spacing: 0.02em;
+  }
+
+  .logo-dot {
+    width: 8px; height: 8px;
+    background: var(--accent);
+    border-radius: 50%;
+    box-shadow: 0 0 8px var(--accent);
+  }
+
+  .header-actions { display: flex; gap: 8px; }
+
+  button {
+    font-family: var(--sans);
+    font-size: 13px;
+    cursor: pointer;
+    border-radius: 4px;
+    transition: all 0.15s;
+    font-weight: 400;
+  }
+
+  .btn {
+    background: transparent;
+    border: 1px solid var(--border2);
+    color: var(--text2);
+    padding: 7px 14px;
+  }
+  .btn:hover { border-color: var(--text2); color: var(--text); }
+
+  .btn-primary {
+    background: var(--accent);
+    border: none;
+    color: #000;
+    padding: 7px 16px;
+    font-weight: 500;
+  }
+  .btn-primary:hover { background: var(--accent2); }
+
+  .btn-edit {
+    background: transparent;
+    border: none;
+    color: var(--text3);
+    padding: 4px 8px;
+    font-size: 13px;
+  }
+  .btn-edit:hover { color: var(--info); }
+
+  .btn-danger {
+    background: transparent;
+    border: none;
+    color: var(--text3);
+    padding: 4px 8px;
+    font-size: 12px;
+  }
+  .btn-danger:hover { color: var(--danger); }
+
+  .btn-icon {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--text2);
+    padding: 6px 10px;
+    font-size: 12px;
+  }
+  .btn-icon:hover { border-color: var(--border2); color: var(--text); }
+
+  .main { display: flex; height: calc(100vh - 56px); overflow: hidden; }
+
+  .sidebar {
+    width: 340px;
+    min-width: 340px;
+    background: var(--bg2);
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .sidebar-header {
+    padding: 16px 20px 12px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .sidebar-title {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 12px;
+  }
+
+  .sidebar-body { padding: 16px 20px; flex: 1; overflow-y: auto; }
+
+  .field { margin-bottom: 12px; }
+  .field label {
+    display: block;
+    font-size: 11px;
+    color: var(--text3);
+    font-family: var(--mono);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 5px;
+  }
+
+  input[type=text], input[type=number], select, textarea {
+    width: 100%;
+    background: var(--bg3);
+    border: 1px solid var(--border);
+    color: var(--text);
+    padding: 8px 10px;
+    border-radius: 4px;
+    font-family: var(--sans);
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+  input::placeholder { color: var(--text3); }
+  select option { background: var(--bg3); }
+
+  .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+  .stats-bar {
+    display: flex;
+    gap: 1px;
+    background: var(--border);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .stat {
+    flex: 1;
+    background: var(--bg2);
+    padding: 10px 16px;
+    text-align: center;
+  }
+
+  .stat-val {
+    font-family: var(--mono);
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--accent);
+    display: block;
+    line-height: 1;
+    margin-bottom: 2px;
+  }
+
+  .stat-lbl {
+    font-size: 10px;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .table-area {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .table-toolbar {
+    padding: 10px 16px;
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg2);
+  }
+
+  .search-wrap { flex: 1; position: relative; }
+  .search-wrap input { padding-left: 32px; background: var(--bg3); }
+
+  .search-icon {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--text3);
+    font-size: 13px;
+    pointer-events: none;
+  }
+
+  .result-count {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text3);
+    white-space: nowrap;
+  }
+
+  .tbl-wrap { flex: 1; overflow: auto; }
+
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+
+  thead th {
+    background: var(--bg2);
+    padding: 8px 12px;
+    text-align: left;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text3);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    cursor: pointer;
+    user-select: none;
+  }
+  thead th:hover { color: var(--text2); }
+  thead th.sorted { color: var(--accent); }
+
+  tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.1s;
+  }
+  tbody tr:hover { background: var(--bg3); }
+  tbody tr.is-new { background: var(--new); border-left: 2px solid var(--new-border); }
+
+  td {
+    padding: 7px 12px;
+    color: var(--text);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 200px;
+  }
+
+  td.mono { font-family: var(--mono); font-size: 11px; color: var(--text2); }
+  td.price { font-family: var(--mono); font-size: 12px; color: var(--warn); text-align: right; }
+  td.qty { font-family: var(--mono); font-size: 12px; text-align: right; color: var(--text2); }
+
+  .badge {
+    display: inline-block;
+    font-family: var(--mono);
+    font-size: 10px;
+    padding: 2px 7px;
+    border-radius: 3px;
+    border: 1px solid var(--border2);
+    color: var(--text2);
+    background: var(--bg3);
+  }
+
+  .badge.cp { border-color: #4d9fff44; color: var(--info); }
+  .badge.gel { border-color: #00e5a044; color: var(--accent); }
+  .badge.sir { border-color: #ffb84d44; color: var(--warn); }
+  .badge.pom { border-color: #ff4d4d44; color: var(--danger); }
+  .badge.inj { border-color: #cc44ff44; color: #cc44ff; }
+
+  .tbl-msg {
+    padding: 40px;
+    text-align: center;
+    color: var(--text3);
+    font-family: var(--mono);
+    font-size: 12px;
+  }
+
+  .truncate-bar {
+    padding: 8px 16px;
+    text-align: center;
+    font-size: 11px;
+    color: var(--text3);
+    font-family: var(--mono);
+    background: var(--bg2);
+    border-top: 1px solid var(--border);
+  }
+
+  .toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--accent);
+    color: #000;
+    padding: 10px 18px;
+    border-radius: 4px;
+    font-weight: 500;
+    font-size: 13px;
+    opacity: 0;
+    transform: translateY(8px);
+    transition: all 0.2s;
+    z-index: 999;
+    pointer-events: none;
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+
+  .overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,0.7);
+    z-index: 200;
+    align-items: center;
+    justify-content: center;
+  }
+  .overlay.open { display: flex; }
+
+  .modal {
+    background: var(--bg2);
+    border: 1px solid var(--border2);
+    border-radius: 6px;
+    width: 560px;
+    max-width: 90vw;
+    overflow: hidden;
+  }
+
+  .modal-head {
+    padding: 16px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+  }
+
+  .modal-head h3 {
+    font-family: var(--mono);
+    font-size: 13px;
+    color: var(--text);
+    font-weight: 500;
+  }
+
+  .modal-body { padding: 20px; }
+
+  .code-preview {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 12px;
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--text2);
+    overflow: auto;
+    max-height: 200px;
+    white-space: pre;
+    line-height: 1.6;
+    margin-bottom: 16px;
+  }
+
+  .modal-actions { display: flex; gap: 8px; justify-content: flex-end; }
+
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--text3); }
+
+  input.error { border-color: var(--danger) !important; }
+
+  .sidebar-footer {
+    padding: 12px 20px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    gap: 8px;
+  }
+
+  .instructions {
+    font-size: 11px;
+    color: var(--text3);
+    line-height: 1.6;
+    padding: 12px;
+    background: var(--bg3);
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    margin-bottom: 16px;
+  }
+  .instructions strong { color: var(--text2); font-weight: 500; }
+
+  .sort-arrow { margin-left: 4px; opacity: 0.5; }
+  thead th.sorted .sort-arrow { opacity: 1; color: var(--accent); }
+</style>
 </head>
 <body>
-    <h1>Editeur de Nomenclature</h1>
-    <p>Bienvenue dans l'éditeur de nomenclature.</p>
-    <!-- Add your content here -->
+
+<header>
+  <div class="logo">
+    <div class="logo-dot"></div>
+    NOMENCLATURE.JS — Éditeur
+  </div>
+  <div class="header-actions">
+    <button class="btn" onclick="ouvrirModal()">Aperçu du code</button>
+    <button class="btn-icon" onclick="copierCode()">⎘ Copier</button>
+    <button class="btn-primary" onclick="telecharger()">↓ Exporter .js</button>
+  </div>
+</header>
+
+<div class="main">
+  <div class="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-title">Nouvel article</div>
+    </div>
+    <div class="sidebar-body">
+      <div class="instructions">
+        Remplissez les champs ci-dessous puis cliquez <strong>Ajouter</strong>.
+        Le fichier exporté remplace directement <strong>nomenclature.js</strong> — même format, compatible sans modification.
+      </div>
+      <div class="field">
+        <label>Code-barres EAN13 *</label>
+        <input type="text" id="f-code" placeholder="6118000XXXXXXX" maxlength="13">
+      </div>
+      <div class="field">
+        <label>Nom commercial *</label>
+        <input type="text" id="f-nom" placeholder="ex: DOLIPRANE 500MG">
+      </div>
+      <div class="field">
+        <label>DCI / Principe actif *</label>
+        <input type="text" id="f-dci" placeholder="ex: PARACETAMOL">
+      </div>
+      <div class="field">
+        <label>Forme pharmaceutique</label>
+        <select id="f-forme">
+          <option value="cp">cp — Comprimé</option>
+          <option value="gel">gel — Gélule</option>
+          <option value="sir">sir — Sirop / Sachet</option>
+          <option value="pom">pom — Pommade</option>
+          <option value="inj">inj — Injectable</option>
+          <option value="aut">aut — Autre</option>
+          <option value="spr">spr — Spray</option>
+          <option value="col">col — Collyre</option>
+          <option value="sup">sup — Suppositoire</option>
+        </select>
+      </div>
+      <div class="field-row">
+        <div class="field">
+          <label>Quantité</label>
+          <input type="number" id="f-qte" placeholder="30" min="1">
+        </div>
+        <div class="field">
+          <label>Prix (DH)</label>
+          <input type="number" id="f-prix" placeholder="0.00" step="0.01" min="0">
+        </div>
+      </div>
+      <div class="field">
+        <label>Désignation conditionnement</label>
+        <input type="text" id="f-cond" placeholder="ex: 1 BOITE 30 COMPRIME">
+      </div>
+    </div>
+    <div class="sidebar-footer">
+      <button class="btn-primary" onclick="ajouterArticle()" style="flex:1">+ Ajouter</button>
+      <button class="btn" onclick="viderFormulaire()">Effacer</button>
+    </div>
+  </div>
+
+  <div class="table-area">
+    <div class="stats-bar" id="stats-bar"></div>
+    <div class="table-toolbar">
+      <div class="search-wrap">
+        <span class="search-icon">⌕</span>
+        <input type="text" id="search" placeholder="Rechercher nom, DCI, code EAN…" oninput="filtrer()">
+      </div>
+      <span class="result-count" id="result-count"></span>
+      <button class="btn-icon" onclick="reinitialiserFiltres()">✕ Effacer</button>
+    </div>
+    <div class="tbl-wrap" id="tbl-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th onclick="trierPar(0)" id="th-0">Code EAN <span class="sort-arrow">↕</span></th>
+            <th onclick="trierPar(1)" id="th-1">Nom commercial <span class="sort-arrow">↕</span></th>
+            <th onclick="trierPar(2)" id="th-2">DCI <span class="sort-arrow">↕</span></th>
+            <th onclick="trierPar(3)" id="th-3">Forme <span class="sort-arrow">↕</span></th>
+            <th onclick="trierPar(4)" id="th-4" style="text-align:right">Qté <span class="sort-arrow">↕</span></th>
+            <th onclick="trierPar(5)" id="th-5" style="text-align:right">Prix DH <span class="sort-arrow">↕</span></th>
+            <th>Conditionnement</th>
+            <th style="width:40px"></th>
+          </tr>
+        </thead>
+        <tbody id="tbody"></tbody>
+      </table>
+      <div id="tbl-bottom"></div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<div class="overlay" id="overlay" onclick="fermerModal(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-head">
+      <h3>Aperçu — nomenclature.js</h3>
+      <button class="btn-icon" onclick="fermerModal()">✕</button>
+    </div>
+    <div class="modal-body">
+      <p style="font-size:12px;color:var(--text3);margin-bottom:12px;font-family:var(--mono)">
+        Extrait des 3 premiers enregistrements · format complet à l'export
+      </p>
+      <div class="code-preview" id="code-preview"></div>
+      <div class="modal-actions">
+        <button class="btn" onclick="copierCode()">⎘ Copier tout</button>
+        <button class="btn-primary" onclick="telecharger()">↓ Télécharger nomenclature.js</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+window.NOMENCLATURE=[
+["6118000100001","DOLIPRANE 500MG","PARACETAMOL","cp",30,12.0,"1 BOITE 30 COMPRIME"],
+["6118000100002","AMOXICILLINE 500MG","AMOXICILLINE","gel",24,18.5,"1 BOITE 24 GELULE"],
+["6118000100003","AUGMENTIN 1G","AMOXICILLINE+AC CLAVULANIQUE","cp",12,35.0,"1 BOITE 12 COMPRIME"],
+["6118000100004","DAFALGAN 1G","PARACETAMOL","cp",16,15.0,"1 BOITE 16 COMPRIME"],
+["6118000100005","VENTOLIN 100MCG","SALBUTAMOL","spr",1,30.0,"1 FLACON 200 DOSES"],
+["6118000100006","FASTUM GEL","KETOPROFENE","pom",1,25.0,"1 TUBE 50G"],
+["6118000100007","ZENTEL 400MG","ALBENDAZOLE","cp",1,10.0,"1 COMPRIME"],
+["6118000100008","CLAMOXYL 250MG","AMOXICILLINE","sir",1,22.0,"1 FLACON 100ML"],
+["6118000100009","FLAGYL 500MG","METRONIDAZOLE","cp",20,14.0,"1 BOITE 20 COMPRIME"],
+["6118000100010","PREVISCAN 20MG","FLUINDIONE","cp",30,28.0,"1 BOITE 30 COMPRIME"]
+];
+</script>
+
+<script>
+let data=[],filtered=[],newIds=new Set(),sortCol=-1,sortAsc=true,editId=null;
+const MAX_ROWS=300;
+
+(function init(){
+  if(typeof window.NOMENCLATURE!=='undefined'){
+    data=window.NOMENCLATURE.map((r,i)=>Object.assign({_id:i},r));
+  }else{data=[];}
+  filtered=[...data];
+  renderStats();renderTable();
+})();
+
+function renderStats(){
+  const total=data.length,formes={};let prixTotal=0;
+  data.forEach(r=>{const f=r[3]||'?';formes[f]=(formes[f]||0)+1;prixTotal+=parseFloat(r[5])||0;});
+  const nbFormes=Object.keys(formes).length;
+  const prixMoy=total?(prixTotal/total).toFixed(2):'0.00';
+  document.getElementById('stats-bar').innerHTML=
+    '<div class="stat"><span class="stat-val">'+total.toLocaleString('fr-MA')+'</span><span class="stat-lbl">Articles</span></div>'+
+    '<div class="stat"><span class="stat-val">'+nbFormes+'</span><span class="stat-lbl">Formes</span></div>'+
+    '<div class="stat"><span class="stat-val">'+prixMoy+'</span><span class="stat-lbl">Prix moyen DH</span></div>'+
+    '<div class="stat"><span class="stat-val">'+newIds.size+'</span><span class="stat-lbl">Nouveaux</span></div>';
+}
+
+function renderTable(){
+  const tbody=document.getElementById('tbody'),bottom=document.getElementById('tbl-bottom'),count=document.getElementById('result-count');
+  count.textContent=filtered.length.toLocaleString('fr-MA')+' résultat(s)';
+  if(!filtered.length){tbody.innerHTML='';bottom.innerHTML='<div class="tbl-msg">Aucun résultat trouvé.</div>';return;}
+  const rows=filtered.slice(0,MAX_ROWS);
+  tbody.innerHTML=rows.map(r=>{
+    const isNew=newIds.has(r._id),forme=(r[3]||'').toLowerCase();
+    const badgeCls=['cp','gel','sir','pom','inj'].includes(forme)?forme:'';
+    return '<tr class="'+(isNew?'is-new':'')+'">'+
+      '<td class="mono">'+(r[0]||'')+'</td>'+
+      '<td title="'+(r[1]||'')+'" style="max-width:180px">'+(r[1]||'')+'</td>'+
+      '<td title="'+(r[2]||'')+'" style="max-width:160px;color:var(--text2)">'+(r[2]||'')+'</td>'+
+      '<td><span class="badge '+badgeCls+'">'+(r[3]||'')+'</span></td>'+
+      '<td class="qty">'+(r[4]||'')+'</td>'+
+      '<td class="price">'+parseFloat(r[5]||0).toFixed(2)+'</td>'+
+      '<td style="color:var(--text3);font-size:11px;max-width:200px" title="'+(r[6]||'')+'">'+(r[6]||'')+'</td>'+
+      '<td style="white-space:nowrap"><button class="btn-edit" onclick="editerArticle('+r._id+')" title="Modifier">✎</button><button class="btn-danger" onclick="supprimer('+r._id+')" title="Supprimer">✕</button></td>'+
+    '</tr>';
+  }).join('');
+  if(filtered.length>MAX_ROWS){
+    bottom.innerHTML='<div class="truncate-bar">Affichage limité à '+MAX_ROWS+' lignes sur '+filtered.length.toLocaleString('fr-MA')+' — affinez la recherche.</div>';
+  }else{bottom.innerHTML='';}
+}
+
+function filtrer(){
+  const q=document.getElementById('search').value.toLowerCase().trim();
+  if(!q){filtered=[...data];}
+  else{filtered=data.filter(r=>(r[0]+'').includes(q)||(r[1]||'').toLowerCase().includes(q)||(r[2]||'').toLowerCase().includes(q)||(r[3]||'').toLowerCase().includes(q));}
+  if(sortCol>=0)appliquerTri();
+  renderTable();
+}
+
+function reinitialiserFiltres(){document.getElementById('search').value='';filtrer();}
+
+function trierPar(col){
+  if(sortCol===col){sortAsc=!sortAsc;}else{sortCol=col;sortAsc=true;}
+  document.querySelectorAll('thead th').forEach((th,i)=>{
+    th.classList.toggle('sorted',i===col);
+    const arr=th.querySelector('.sort-arrow');
+    if(arr)arr.textContent=i===col?(sortAsc?'↑':'↓'):'↕';
+  });
+  appliquerTri();renderTable();
+}
+
+function appliquerTri(){
+  filtered.sort((a,b)=>{
+    let va=a[sortCol],vb=b[sortCol];
+    if(sortCol===4||sortCol===5){va=parseFloat(va)||0;vb=parseFloat(vb)||0;}
+    else{va=(va||'').toString().toLowerCase();vb=(vb||'').toString().toLowerCase();}
+    return sortAsc?(va>vb?1:-1):(va<vb?1:-1);
+  });
+}
+
+function ajouterArticle(){
+  const code=document.getElementById('f-code').value.trim();
+  const nom=document.getElementById('f-nom').value.trim().toUpperCase();
+  const dci=document.getElementById('f-dci').value.trim().toUpperCase();
+  const forme=document.getElementById('f-forme').value;
+  const qte=parseInt(document.getElementById('f-qte').value)||0;
+  const prix=parseFloat(document.getElementById('f-prix').value)||0;
+  const cond=document.getElementById('f-cond').value.trim().toUpperCase();
+  let ok=true;
+  ['f-code','f-nom','f-dci'].forEach(id=>{
+    const el=document.getElementById(id),empty=!el.value.trim();
+    el.classList.toggle('error',empty);if(empty)ok=false;
+  });
+  if(!ok){toast('⚠ Champs obligatoires manquants',3000);return;}
+  if(data.find(r=>r[0]===code)){document.getElementById('f-code').classList.add('error');toast('⚠ Ce code EAN existe déjà',3000);return;}
+  const newId=Date.now();
+  data.unshift({_id:newId,0:code,1:nom,2:dci,3:forme,4:qte,5:prix,6:cond});
+  newIds.add(newId);filtrer();renderStats();viderFormulaire();toast('✓ Article ajouté',2000);
+}
+
+function viderFormulaire(){
+  ['f-code','f-nom','f-dci','f-qte','f-prix','f-cond'].forEach(id=>{
+    document.getElementById(id).value='';document.getElementById(id).classList.remove('error');
+  });
+  document.getElementById('f-forme').value='cp';
+}
+
+function editerArticle(id){
+  const row=data.find(r=>r._id===id);if(!row)return;
+  editId=id;
+  document.getElementById('f-code').value=row[0]||'';
+  document.getElementById('f-nom').value=row[1]||'';
+  document.getElementById('f-dci').value=row[2]||'';
+  document.getElementById('f-forme').value=row[3]||'cp';
+  document.getElementById('f-qte').value=row[4]||'';
+  document.getElementById('f-prix').value=row[5]||'';
+  document.getElementById('f-cond').value=row[6]||'';
+  document.querySelector('.sidebar-title').textContent="Modifier l'article";
+  document.querySelector('.sidebar-footer .btn-primary').textContent='✓ Enregistrer';
+  document.querySelector('.sidebar-footer .btn-primary').onclick=enregistrerModification;
+  document.querySelector('.sidebar-footer .btn').onclick=annulerEdition;
+  document.querySelector('.sidebar-footer .btn').textContent='Annuler';
+  document.querySelector('.sidebar-body').scrollTop=0;
+  toast('Modification en cours…',1500);
+}
+
+function enregistrerModification(){
+  const code=document.getElementById('f-code').value.trim();
+  const nom=document.getElementById('f-nom').value.trim().toUpperCase();
+  const dci=document.getElementById('f-dci').value.trim().toUpperCase();
+  const forme=document.getElementById('f-forme').value;
+  const qte=parseInt(document.getElementById('f-qte').value)||0;
+  const prix=parseFloat(document.getElementById('f-prix').value)||0;
+  const cond=document.getElementById('f-cond').value.trim().toUpperCase();
+  let ok=true;
+  ['f-code','f-nom','f-dci'].forEach(id=>{
+    const el=document.getElementById(id),empty=!el.value.trim();
+    el.classList.toggle('error',empty);if(empty)ok=false;
+  });
+  if(!ok){toast('⚠ Champs obligatoires manquants',3000);return;}
+  if(data.find(r=>r[0]===code&&r._id!==editId)){document.getElementById('f-code').classList.add('error');toast('⚠ Ce code EAN existe déjà',3000);return;}
+  const row=data.find(r=>r._id===editId);
+  if(row){row[0]=code;row[1]=nom;row[2]=dci;row[3]=forme;row[4]=qte;row[5]=prix;row[6]=cond;}
+  annulerEdition();filtrer();renderStats();toast('✓ Article modifié',2000);
+}
+
+function annulerEdition(){
+  editId=null;viderFormulaire();
+  document.querySelector('.sidebar-title').textContent='Nouvel article';
+  document.querySelector('.sidebar-footer .btn-primary').textContent='+ Ajouter';
+  document.querySelector('.sidebar-footer .btn-primary').onclick=ajouterArticle;
+  document.querySelector('.sidebar-footer .btn').onclick=viderFormulaire;
+  document.querySelector('.sidebar-footer .btn').textContent='Effacer';
+}
+
+function supprimer(id){
+  if(!confirm('Supprimer cet article ?'))return;
+  data=data.filter(r=>r._id!==id);newIds.delete(id);filtrer();renderStats();toast('Article supprimé',1500);
+}
+
+function genererCode(){
+  const rows=data.map(r=>
+    '["'+r[0]+'","'+(r[1]||'').replace(/"/g,'\\"')+'","'+(r[2]||'').replace(/"/g,'\\"')+'","'+r[3]+'",'+r[4]+','+parseFloat(r[5]||0).toFixed(1)+',"'+(r[6]||'').replace(/"/g,'\\"')+'"]'
+  );
+  return 'window.NOMENCLATURE=['+rows.join(',')+'];';
+}
+
+function telecharger(){
+  const code=genererCode(),blob=new Blob([code],{type:'text/javascript'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='nomenclature.js';
+  document.body.appendChild(a);a.click();document.body.removeChild(a);URL.revokeObjectURL(a.href);
+  toast('✓ Fichier téléchargé',2000);fermerModal();
+}
+
+function copierCode(){
+  navigator.clipboard.writeText(genererCode())
+    .then(()=>toast('✓ Code copié dans le presse-papier',2000))
+    .catch(()=>toast('⚠ Échec de la copie — utilisez le téléchargement',3000));
+}
+
+function ouvrirModal(){
+  const code=genererCode(),apercu=code.substring(0,800)+(code.length>800?'\n…\n('+data.length+' enregistrements au total)':'');
+  document.getElementById('code-preview').textContent=apercu;
+  document.getElementById('overlay').classList.add('open');
+}
+
+function fermerModal(e){
+  if(!e||e.target===document.getElementById('overlay'))
+    document.getElementById('overlay').classList.remove('open');
+}
+
+function toast(msg,duration){
+  duration=duration||2500;
+  const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');
+  clearTimeout(el._timer);el._timer=setTimeout(()=>el.classList.remove('show'),duration);
+}
+</script>
 </body>
 </html>
